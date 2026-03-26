@@ -16,7 +16,13 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 DEFAULT_DATA_PATH = Path(r"c:\Users\Administrator\Downloads\Training dataset.xlsx")
-DATA_PATH = Path(os.getenv("ROAS_DATA_PATH", DEFAULT_DATA_PATH))
+REPO_DATA_PATH = Path("data") / "Training dataset.xlsx"
+DATA_PATH = Path(
+    os.getenv(
+        "ROAS_DATA_PATH",
+        str(REPO_DATA_PATH if REPO_DATA_PATH.exists() else DEFAULT_DATA_PATH),
+    )
+)
 OUTPUT_DIR = Path("model_outputs")
 TARGET = "ROAS"
 

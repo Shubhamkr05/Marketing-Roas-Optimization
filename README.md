@@ -86,6 +86,14 @@ Set your dataset path before running:
 $env:ROAS_DATA_PATH="C:\path\to\Training dataset.xlsx"
 ```
 
+You can also place the Excel file at:
+
+```text
+data/Training dataset.xlsx
+```
+
+If that file exists, the app will use it automatically.
+
 ## Run The App
 
 ```powershell
@@ -96,6 +104,23 @@ Then open:
 
 ```text
 http://127.0.0.1:5000
+```
+
+## Deploy To Render
+
+This repo includes a `render.yaml` file, so you can deploy it as a public web app on Render.
+
+Before deploying:
+
+1. Add your dataset to `data/Training dataset.xlsx` in the repository, or configure the `ROAS_DATA_PATH` environment variable in Render.
+2. Push the latest code to GitHub.
+3. In Render, create a new Blueprint or Web Service from this repository.
+4. Render will build the app using `requirements.txt` and start it with `gunicorn app:app`.
+
+After deployment, Render will give you a public URL like:
+
+```text
+https://your-app-name.onrender.com
 ```
 
 ## Train The Model Manually

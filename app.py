@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import threading
 import webbrowser
 from pathlib import Path
@@ -108,5 +109,11 @@ def index():
 
 
 if __name__ == "__main__":
-    threading.Timer(1.0, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    host = os.getenv("FLASK_HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "5000"))
+    debug = os.getenv("FLASK_DEBUG", "true").lower() == "true"
+
+    if host in {"127.0.0.1", "localhost"}:
+        threading.Timer(1.0, lambda: webbrowser.open(f"http://{host}:{port}")).start()
+
+    app.run(debug=debug, host=host, port=port)
