@@ -17,12 +17,20 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 DEFAULT_DATA_PATH = Path(r"c:\Users\Administrator\Downloads\Training dataset.xlsx")
 REPO_DATA_PATH = Path("data") / "Training dataset.xlsx"
-DATA_PATH = Path(
-    os.getenv(
-        "ROAS_DATA_PATH",
-        str(REPO_DATA_PATH if REPO_DATA_PATH.exists() else DEFAULT_DATA_PATH),
-    )
-)
+
+
+def resolve_data_path() -> Path:
+    env_path = os.getenv("ROAS_DATA_PATH")
+    if env_path:
+        return Path(env_path)
+    if REPO_DATA_PATH.exists():
+        return REPO_DATA_PATH
+    if DEFAULT_DATA_PATH.exists():
+        return DEFAULT_DATA_PATH
+    return REPO_DATA_PATH
+
+
+DATA_PATH = resolve_data_path()
 OUTPUT_DIR = Path("model_outputs")
 TARGET = "ROAS"
 
@@ -85,6 +93,11 @@ def prepare_dataset(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_dataset(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Dataset not found at '{path}'. Add the file to 'data/Training dataset.xlsx' "
+            "or set the ROAS_DATA_PATH environment variable."
+        )
     df = pd.read_excel(path)
     return prepare_dataset(df)
 
