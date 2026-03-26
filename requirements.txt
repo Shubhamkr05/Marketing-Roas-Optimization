@@ -1,0 +1,5 @@
+flask
+joblib
+openpyxl
+pandas
+scikit-learn

@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ROAS Predictor</title>
+  <style>
+    :root {
+      --bg: #f6f1e7;
+      --panel: #fffaf3;
+      --ink: #1f2933;
+      --muted: #66727c;
+      --line: rgba(31, 41, 51, 0.12);
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --warn: #a16207;
+      --bad: #b91c1c;
+      --radius: 18px;
+      --shadow: 0 12px 28px rgba(31, 41, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #f9f4ec 0%, var(--bg) 100%);
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 2.15fr 0.95fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .main-panel {
+      padding: 18px;
+    }
+
+    .side-panel {
+      padding: 18px;
+      position: sticky;
+      top: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .subtext {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.08);
+      color: var(--accent-dark);
+      font-size: 0.84rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.wide {
+      grid-column: span 2;
+    }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.96rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: rgba(15, 118, 110, 0.5);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      font: inherit;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .action-note {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.25rem;
+      line-height: 1.15;
+    }
+
+    .score-card {
+      padding: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(15, 118, 110, 0.08), rgba(255, 255, 255, 0.9));
+    }
+
+    .overline {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .score {
+      margin: 0;
+      font-size: 2.6rem;
+      line-height: 1;
+      font-weight: 700;
+      color: var(--accent-dark);
+    }
+
+    .note {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .status {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: rgba(15, 118, 110, 0.1);
+      color: var(--accent-dark);
+    }
+
+    .status.warn {
+      background: rgba(161, 98, 7, 0.12);
+      color: var(--warn);
+    }
+
+    .status.low {
+      background: rgba(185, 28, 28, 0.1);
+      color: var(--bad);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .mini span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+
+    .mini strong {
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+
+    .footnote {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .error {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(185, 28, 28, 0.14);
+      background: rgba(185, 28, 28, 0.06);
+      color: var(--bad);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 1080px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        position: static;
+      }
+
+      form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 12px;
+      }
+
+      .main-panel,
+      .side-panel {
+        padding: 14px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      form,
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field.wide {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% set status_class = 'low' %}
+  {% set status_label = 'Needs improvement' %}
+  {% if prediction is not none and prediction >= 1.2 %}
+    {% set status_class = '' %}
+    {% set status_label = 'Above target' %}
+  {% elif prediction is not none and prediction >= 1.0 %}
+    {% set status_class = 'warn' %}
+    {% set status_label = 'Near target' %}
+  {% endif %}
+
+  <div class="page">
+    <div class="shell">
+      <section class="panel main-panel">
+        <div class="topbar">
+          <div>
+            <h1>ROAS Predictor</h1>
+            <p class="subtext">Change the campaign values and predict expected return on ad spend.</p>
+          </div>
+          <div class="chip">Random Forest Model</div>
+        </div>
+
+        <form method="post">
+          <div class="field">
+            <label for="date">Date</label>
+            <input id="date" name="date" type="date" value="{{ form_values['date'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="Cleaned_Platform">Platform</label>
+            <select id="Cleaned_Platform" name="Cleaned_Platform">
+              {% for option in form_choices['Cleaned_Platform'] %}
+              <option value="{{ option }}" {% if form_values['Cleaned_Platform'] == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field wide">
+            <label for="Campaign">Campaign</label>
+            <select id="Campaign" name="Campaign">
+              {% for option in form_choices['Campaign'] %}
+              <option value="{{ option }}" {% if form_values['Campaign'] == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="Region">Region</label>
+            <select id="Region" name="Region">
+              {% for option in form_choices['Region'] %}
+              <option value="{{ option }}" {% if form_values['Region'] == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="Product_Category">Product Category</label>
+            <select id="Product_Category" name="Product_Category">
+              {% for option in form_choices['Product_Category'] %}
+              <option value="{{ option }}" {% if form_values['Product_Category'] == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="Target_Audience">Target Audience</label>
+            <select id="Target_Audience" name="Target_Audience">
+              {% for option in form_choices['Target_Audience'] %}
+              <option value="{{ option }}" {% if form_values['Target_Audience'] == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="Creative_Type">Creative Type</label>
+            <select id="Creative_Type" name="Creative_Type">
+              {% for option in form_choices['Creative_Type'] %}
+              <option value="{{ option }}" {% if form_values['Creative_Type'] == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="Spend">Ad Spend</label>
+            <input id="Spend" name="Spend" type="number" step="0.01" value="{{ form_values['Spend'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="CPM">CPM</label>
+            <input id="CPM" name="CPM" type="number" step="0.01" value="{{ form_values['CPM'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="Impressions">Impressions</label>
+            <input id="Impressions" name="Impressions" type="number" step="1" value="{{ form_values['Impressions'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="Frequency">Frequency</label>
+            <input id="Frequency" name="Frequency" type="number" step="0.01" value="{{ form_values['Frequency'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="Customer_LTV">Customer LTV</label>
+            <input id="Customer_LTV" name="Customer_LTV" type="number" step="0.01" value="{{ form_values['Customer_LTV'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="Cleaned_Completion_Rate">Completion Rate</label>
+            <input id="Cleaned_Completion_Rate" name="Cleaned_Completion_Rate" type="number" min="0" max="1" step="0.001" value="{{ form_values['Cleaned_Completion_Rate'] }}" required>
+          </div>
+
+          <div class="field">
+            <label for="Is_Competitive_Event">Competitive Event</label>
+            <select id="Is_Competitive_Event" name="Is_Competitive_Event">
+              <option value="false" {% if not form_values['Is_Competitive_Event'] or form_values['Is_Competitive_Event'] == 'false' %}selected{% endif %}>No</option>
+              <option value="true" {% if form_values['Is_Competitive_Event'] == 'true' or form_values['Is_Competitive_Event'] == True %}selected{% endif %}>Yes</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <button type="submit">Predict ROAS</button>
+            <div class="action-note">Edit values and submit to update the forecast.</div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel side-panel">
+        <h2>Prediction</h2>
+        <div class="score-card">
+          <span class="overline">Expected ROAS</span>
+          {% if prediction is not none %}
+          <p class="score">{{ "%.3f"|format(prediction) }}</p>
+          <p class="note">Use this number to compare scenarios before adjusting budget.</p>
+          <div class="status {{ status_class }}">{{ status_label }}</div>
+          {% else %}
+          <p class="score">-</p>
+          <p class="note">Submit the form to generate a prediction.</p>
+          {% endif %}
+        </div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <div class="mini-grid">
+          <div class="mini">
+            <span>Interpretation</span>
+            <strong>ROAS above 1.0 is generally better than break-even.</strong>
+          </div>
+          <div class="mini">
+            <span>Target</span>
+            <strong>ROAS near 1.2 or more is a stronger result.</strong>
+          </div>
+          <div class="mini">
+            <span>Model</span>
+            <strong>Prediction is generated using Random Forest.</strong>
+          </div>
+          <div class="mini">
+            <span>Use</span>
+            <strong>Compare region, audience, creative, and spend plans.</strong>
+          </div>
+        </div>
+
+        <div class="footnote">
+          This page uses <code>model_outputs/best_roas_model.joblib</code> and the feature pipeline from <code>train_roas_model.py</code>.
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>
